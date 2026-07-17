@@ -1,0 +1,7 @@
+.venv/
+__pycache__/
+*.pyc
+run.log
+# agent-created durable notes are per-participant, not shipped by us:
+MEMORY.md
+TODO.md

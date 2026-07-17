@@ -1,0 +1,11 @@
+[project]
+name = "cecam-demo"
+version = "0.1.0"
+description = "CECAM workshop demo: an AutoResearch harness that forces an honest catalysis model."
+requires-python = ">=3.11"
+dependencies = [
+    "numpyro>=0.15",
+    "jax>=0.4",
+    "numpy>=1.26",
+    "matplotlib>=3.8",
+]

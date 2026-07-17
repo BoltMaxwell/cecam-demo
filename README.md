@@ -10,13 +10,13 @@ mass is the whole puzzle — and the reason a harness matters.
 - A coding agent: **Codex** (uses `AGENTS.md`) or **Claude** (uses `CLAUDE.md`).
 - A paid agent/API plan for that agent.
 - [`uv`](https://docs.astral.sh/uv/) installed.
-- No local setup? Use the Colab fallback: **[Open in Colab](colab/cecam_demo.ipynb)**.
+- No local setup? Use the Colab fallback: **[Open in Colab](https://colab.research.google.com/github/BoltMaxwell/cecam-demo/blob/main/colab/cecam_demo.ipynb)**.
 
 ## 1. Get the repo and confirm the baseline
 
 ```bash
-git clone https://github.com/<your-org>/cecam_demo.git
-cd cecam_demo
+git clone https://github.com/BoltMaxwell/cecam-demo.git
+cd cecam-demo
 uv sync
 uv run train.py | grep '^elbo:\|^mass_gate:'
 ```

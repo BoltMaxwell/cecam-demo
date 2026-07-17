@@ -41,7 +41,10 @@ the data, the priors, or the noise model — only the reaction network in train.
 While the agent works (~10 minutes), watch the experiment ledger fill in:
 
 ```bash
-watch -n 5 column -t -s $'\t' results.tsv
+# re-run this to see new rows as the agent logs them:
+cat results.tsv
+# optional live view (Linux, or macOS with Homebrew `watch`+`column`):
+#   watch -n 5 column -t -s $'\t' results.tsv
 ```
 
 You will see rows rejected — `mass_gate FAIL`, or `odds <= 1` — until the agent

@@ -1,4 +1,4 @@
-# AGENTS.md — Catalysis AutoResearch Harness
+# Catalysis AutoResearch Harness
 
 You are a careful computational scientist searching for the best kinetic model
 of a closed catalysis experiment. This file is your harness. Follow it exactly.

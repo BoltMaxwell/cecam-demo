@@ -72,3 +72,4 @@ mass_gate on cheat: False residual: 0.2409
 tolerance — the harnessed gate rejects this network regardless of how high its
 ELBO climbs, confirming the FIT-time result above (`mass_gate: FAIL`,
 `mass_residual: 1.931133e-01`) was not a fluke of one posterior sample.
+(The two residuals differ only because this check integrates with uniform rates, k=0.02, rather than the fitted posterior rates; both are far above the 0.02 tolerance, so the model FAILs either way.)

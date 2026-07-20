@@ -89,3 +89,116 @@ def print_summary(metrics):
         lines.append(f"{field}: {value}")
     lines.append("---")
     print("\n".join(lines))
+
+
+# =============================================================================
+# Dashboard rendering (FIXED). Used by train.py (fit plot) and dashboard.py.
+# These are display-only helpers; they never affect the gate or the ledger.
+# =============================================================================
+DASH_DIR = HERE / ".dash"
+
+
+def _read_ledger(results_tsv):
+    """Parse results.tsv into a list of dict rows (elbo coerced to float)."""
+    p = pathlib.Path(results_tsv)
+    if not p.exists():
+        return []
+    lines = [ln for ln in p.read_text().splitlines() if ln.strip()]
+    if not lines:
+        return []
+    header = lines[0].split("\t")
+    rows = []
+    for line in lines[1:]:
+        row = dict(zip(header, line.split("\t")))
+        try:
+            row["elbo"] = float(row.get("elbo", "nan"))
+        except ValueError:
+            row["elbo"] = float("nan")
+        rows.append(row)
+    return rows
+
+
+def save_fit_plot(species, traj_grid, dt, metrics, path):
+    """Render the current model: species curves vs observed data + total mass.
+
+    traj_grid: [G, nsp] normalised trajectory on the fixed grid. Observed species
+    are solid, hidden species dashed. `metrics` provides elbo and mass_gate (bool).
+    """
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    data = load()
+    times, obs = data["times"], data["obs"]
+    traj = np.asarray(traj_grid) * TOTAL0
+    gt = np.arange(traj.shape[0]) * dt
+    colors = plt.cm.tab10.colors
+
+    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(8, 7),
+                                   gridspec_kw={"height_ratios": [3, 1]})
+    for j, name in enumerate(species):
+        hidden = name not in OBSERVED
+        ax1.plot(gt, traj[:, j], color=colors[j % 10],
+                 ls="--" if hidden else "-",
+                 label=name + (" (hidden)" if hidden else ""))
+    for k, name in enumerate(OBSERVED):
+        ax1.scatter(times, obs[:, k], s=30, zorder=5, edgecolor="k",
+                    linewidth=0.4, color=colors[species.index(name) % 10])
+    gate = "PASS" if metrics.get("mass_gate") else "FAIL"
+    ax1.set_ylabel("concentration (mmol/L)")
+    ax1.set_title(f"Model fit — ELBO={metrics.get('elbo', float('nan')):.2f}"
+                  f"  |  mass gate {gate}")
+    ax1.legend(fontsize=8, ncol=2, loc="upper right")
+
+    ax2.plot(gt, traj.sum(axis=1), color="k")
+    ax2.axhline(TOTAL0, color="tab:red", ls=":", label=f"target {TOTAL0:.0f}")
+    ax2.set_ylabel("total mass"); ax2.set_xlabel("time")
+    ax2.legend(fontsize=8, loc="lower left")
+
+    DASH_DIR.mkdir(exist_ok=True)
+    fig.tight_layout(); fig.savefig(path, dpi=110); plt.close(fig)
+
+
+def save_progress_plot(results_tsv, path):
+    """ELBO vs iteration from the ledger; green o = keep, red x = discard."""
+    import matplotlib
+    matplotlib.use("Agg")
+    import matplotlib.pyplot as plt
+
+    rows = _read_ledger(results_tsv)
+    fig, ax = plt.subplots(figsize=(8, 3.2))
+    if rows:
+        elbos = [r["elbo"] for r in rows]
+        ax.plot(range(len(rows)), elbos, color="0.6", lw=1, zorder=1)
+        for x, r in enumerate(rows):
+            keep = r.get("status") == "keep"
+            ax.scatter(x, r["elbo"], s=60, zorder=3,
+                       marker="o" if keep else "x",
+                       color="tab:green" if keep else "tab:red")
+            if r.get("mass_gate") != "PASS":
+                ax.annotate("mass FAIL", (x, r["elbo"]), fontsize=7, color="tab:red",
+                            textcoords="offset points", xytext=(0, 6))
+        ax.axhline(elbos[0], color="0.8", ls=":", label="baseline")
+        ax.legend(fontsize=8)
+    ax.set_xlabel("iteration"); ax.set_ylabel("ELBO")
+    ax.set_title("AutoResearch progress")
+    DASH_DIR.mkdir(exist_ok=True)
+    fig.tight_layout(); fig.savefig(path, dpi=110); plt.close(fig)
+
+
+def results_table_html(results_tsv):
+    """Return an HTML table for the ledger, or a placeholder if empty."""
+    p = pathlib.Path(results_tsv)
+    if not p.exists() or not p.read_text().strip():
+        return "<p>No runs logged yet.</p>"
+    lines = [ln for ln in p.read_text().splitlines() if ln.strip()]
+    if len(lines) < 2:
+        return "<p>No runs logged yet.</p>"
+    header = lines[0].split("\t")
+    out = ["<table border='1' cellpadding='4' cellspacing='0'><tr>"]
+    out += [f"<th>{h}</th>" for h in header]
+    out.append("</tr>")
+    for line in lines[1:]:
+        out.append("<tr>" + "".join(f"<td>{c}</td>" for c in line.split("\t")) + "</tr>")
+    out.append("</table>")
+    return "\n".join(out)

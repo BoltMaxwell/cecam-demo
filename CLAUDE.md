@@ -65,6 +65,9 @@ it with:
 
     grep "^elbo:\|^mass_gate:" run.log
 
+Each run also writes a fit plot to `.dash/fit.png` automatically (used by the
+optional dashboard). You do not need to produce any plots yourself.
+
 ## Setup
 
 1. Create a branch `autoresearch/<tag>` (tag = today's date) from the current

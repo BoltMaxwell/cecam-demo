@@ -36,6 +36,22 @@ for up to 8 iterations, logging every run to results.tsv. Do not edit prepare.py
 the data, the priors, or the noise model — only the reaction network in train.py.
 ```
 
+## Watch it live (optional dashboard)
+
+In a **second terminal**, start the dashboard and open it in a browser:
+
+```bash
+uv run dashboard.py      # then open http://localhost:8000
+```
+
+It refreshes every 2 seconds and shows two things as the agent works:
+
+- **Current model fit** — the species concentration curves vs. the measured
+  data, plus total mass against the 500 mmol/L target. When the agent adds an
+  unobserved species you'll see a new dashed curve appear.
+- **AutoResearch progress** — the ELBO at each iteration (green = kept,
+  red = discarded) and the full `results.tsv` ledger.
+
 ## 3. Watch the ledger
 
 While the agent works (~10 minutes), watch the experiment ledger fill in:
@@ -58,3 +74,17 @@ Before the workshop we ran the same task **without** the harness (see
 [`cheat-reveal/`](cheat-reveal/)). Free to "just maximise the ELBO," the agent
 raised the score by letting mass leak away — a great fit to unphysical chemistry.
 The harness is the only reason the science comes out honest.
+
+## Optional: see what "cheating" looks like
+
+Curious what an *ungated* agent does? This one-liner pulls a throwaway script
+(kept off this branch on purpose, so your agent never sees it) and runs it from
+`/tmp`:
+
+```bash
+curl -s https://raw.githubusercontent.com/BoltMaxwell/cecam-demo/extras/cheat.py -o /tmp/cheat.py && uv run python /tmp/cheat.py
+```
+
+It fits the same data with a mass **leak** — the ELBO goes *up* while total mass
+falls below 500, so `mass_gate: FAIL`. It saves `/tmp/cheat_mass.png` showing the
+mass draining away. That's exactly the shortcut the harness exists to reject.

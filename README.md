@@ -10,9 +10,7 @@ mass is the whole puzzle — and the reason a harness matters.
 - A coding agent: **Codex** (uses `AGENTS.md`) or **Claude** (uses `CLAUDE.md`).
 - A paid agent/API plan for that agent.
 - [`uv`](https://docs.astral.sh/uv/) installed.
-- No local setup? Two Colab options, nothing to install:
-  - **[Run the baseline in Colab](https://colab.research.google.com/github/BoltMaxwell/cecam-demo/blob/main/colab/cecam_demo.ipynb)** — the harnessed starting point.
-  - **[Step through a real run in Colab](https://colab.research.google.com/github/BoltMaxwell/cecam-demo/blob/extras/replay.ipynb)** — *no agent needed*: fit each candidate model cell by cell and watch the ELBO climb as a hidden species is discovered.
+- No local setup (or no agent)? **[Step through a real run in Colab](https://colab.research.google.com/github/BoltMaxwell/cecam-demo/blob/extras/replay.ipynb)** — fit each candidate model cell by cell and watch the ELBO climb as a hidden species is discovered.
 
 ## 1. Get the repo and confirm the baseline
 

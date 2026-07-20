@@ -10,7 +10,9 @@ mass is the whole puzzle — and the reason a harness matters.
 - A coding agent: **Codex** (uses `AGENTS.md`) or **Claude** (uses `CLAUDE.md`).
 - A paid agent/API plan for that agent.
 - [`uv`](https://docs.astral.sh/uv/) installed.
-- No local setup? Use the Colab fallback: **[Open in Colab](https://colab.research.google.com/github/BoltMaxwell/cecam-demo/blob/main/colab/cecam_demo.ipynb)**.
+- No local setup? Two Colab options, nothing to install:
+  - **[Run the baseline in Colab](https://colab.research.google.com/github/BoltMaxwell/cecam-demo/blob/main/colab/cecam_demo.ipynb)** — the harnessed starting point.
+  - **[Step through a real run in Colab](https://colab.research.google.com/github/BoltMaxwell/cecam-demo/blob/extras/replay.ipynb)** — *no agent needed*: fit each candidate model cell by cell and watch the ELBO climb as a hidden species is discovered.
 
 ## 1. Get the repo and confirm the baseline
 
@@ -70,10 +72,11 @@ intermediate species** that carries the missing mass. That run passes the gate
 
 ## Why this is the point
 
-Before the workshop we ran the same task **without** the harness (see
-[`cheat-reveal/`](cheat-reveal/)). Free to "just maximise the ELBO," the agent
-raised the score by letting mass leak away — a great fit to unphysical chemistry.
-The harness is the only reason the science comes out honest.
+Without the harness, an agent free to "just maximise the ELBO" can raise the
+score by letting mass leak away — a great fit to unphysical chemistry. The
+harness is the only reason the science comes out honest. See the cheat below,
+and the [`extras`](https://github.com/BoltMaxwell/cecam-demo/tree/extras) and
+[`ungated`](https://github.com/BoltMaxwell/cecam-demo/tree/ungated) branches.
 
 ## Optional: see what "cheating" looks like
 
@@ -88,3 +91,11 @@ curl -s https://raw.githubusercontent.com/BoltMaxwell/cecam-demo/extras/cheat.py
 It fits the same data with a mass **leak** — the ELBO goes *up* while total mass
 falls below 500, so `mass_gate: FAIL`. It saves `/tmp/cheat_mass.png` showing the
 mass draining away. That's exactly the shortcut the harness exists to reject.
+
+Want to watch an *agent* try this itself, with no gate at all? The `ungated`
+branch removes the mass gate and the prior lock — clone it and point your agent
+at it, then see whether it stays honest or games the metric:
+
+```bash
+git clone -b ungated https://github.com/BoltMaxwell/cecam-demo.git cecam-ungated
+```

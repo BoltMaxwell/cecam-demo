@@ -1,3 +1,0 @@
-commit	elbo	mass_residual	mass_gate	status	description
-baseline	4.415623e+01	1.831055e-07	PASS	keep	closed 5-species, conserves mass
-cheat	4.934555e+01	1.931133e-01	FAIL	keep(!)	added mass leak (k6 sink on NO2) — higher ELBO, unphysical

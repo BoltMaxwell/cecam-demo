@@ -31,6 +31,9 @@ from numpyro.infer.autoguide import AutoNormal
 import prepare
 
 numpyro.set_platform("cpu")
+# Keep the run output clean: silence JAX's host-to-device transfer-guard logging
+# (harmless CPU transfers; some environments set JAX_TRANSFER_GUARD=log).
+jax.config.update("jax_transfer_guard", "allow")
 
 # =============================================================================
 # Reaction network  --  EDIT THIS BLOCK

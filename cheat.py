@@ -24,6 +24,7 @@ from numpyro.infer import SVI, Trace_ELBO
 from numpyro.infer.autoguide import AutoNormal
 
 numpyro.set_platform("cpu")
+jax.config.update("jax_transfer_guard", "allow")  # keep output clean (see train.py)
 
 OBSERVED = ["NO3", "NO2", "N2", "NH3", "N2O"]
 TOTAL0 = 500.0

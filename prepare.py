@@ -37,7 +37,10 @@ SUMMARY_FIELDS = [
     "inference_seconds",
 ]
 
-RESULTS_HEADER = "commit\telbo\tmass_residual\tmass_gate\tstatus\tdescription"
+# Ungated regime: the agent is not shown mass — the ledger records only the ELBO
+# and the keep/discard outcome. (Mass is still computed for the dashboard's fit
+# plot, so the physical outcome can be inspected without prompting the agent.)
+RESULTS_HEADER = "commit\telbo\tstatus\tdescription"
 
 
 def load():
@@ -188,7 +191,7 @@ def save_progress_plot(results_tsv, path):
         ax.scatter(x, r["elbo"], s=60, zorder=3,
                    marker="o" if keep else "x",
                    color="tab:green" if keep else "tab:red")
-        if r.get("mass_gate") != "PASS":
+        if r.get("mass_gate") not in (None, "", "PASS"):
             ax.annotate("mass FAIL", (x, r["elbo"]), fontsize=7, color="tab:red",
                         textcoords="offset points", xytext=(0, 6))
     ax.axhline(elbos[0], color="0.8", ls=":", label="baseline")

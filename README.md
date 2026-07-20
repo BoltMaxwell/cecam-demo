@@ -73,8 +73,13 @@ intermediate species** that carries the missing mass. That run passes the gate
 Without the harness, an agent free to "just maximise the ELBO" can raise the
 score by letting mass leak away — a great fit to unphysical chemistry. The
 harness is the only reason the science comes out honest. See the cheat below,
-and the [`extras`](https://github.com/BoltMaxwell/cecam-demo/tree/extras) and
-[`ungated`](https://github.com/BoltMaxwell/cecam-demo/tree/ungated) branches.
+and the branch family:
+[`extras`](https://github.com/BoltMaxwell/cecam-demo/tree/extras) (the cheat, the
+replay notebook, and a sample run),
+[`ungated`](https://github.com/BoltMaxwell/cecam-demo/tree/ungated) (the harness
+kept, but the gate and prior-lock lifted), and
+[`no-harness`](https://github.com/BoltMaxwell/cecam-demo/tree/no-harness) (just
+the data and a thin prompt — no harness at all).
 
 ## Optional: see what "cheating" looks like
 
@@ -97,3 +102,7 @@ at it, then see whether it stays honest or games the metric:
 ```bash
 git clone -b ungated https://github.com/BoltMaxwell/cecam-demo.git cecam-ungated
 ```
+
+Or the opposite extreme — **no harness at all**, just the data and a thin prompt:
+the [`no-harness`](https://github.com/BoltMaxwell/cecam-demo/tree/no-harness)
+branch.

@@ -40,3 +40,21 @@ def test_results_table_html_empty(tmp_path):
     tsv = tmp_path / "results.tsv"
     tsv.write_text("commit\telbo\tmass_residual\tmass_gate\tstatus\tdescription\n")
     assert "No runs" in prepare.results_table_html(tsv)
+
+
+def test_save_progress_plot_skips_empty_ledger(tmp_path):
+    tsv = tmp_path / "results.tsv"
+    tsv.write_text("commit\telbo\tmass_residual\tmass_gate\tstatus\tdescription\n")
+    out = tmp_path / "progress.png"
+    prepare.save_progress_plot(tsv, out)
+    assert not out.exists()
+
+
+def test_results_table_html_escapes(tmp_path):
+    tsv = tmp_path / "results.tsv"
+    tsv.write_text(
+        "commit\telbo\tmass_residual\tmass_gate\tstatus\tdescription\n"
+        "aaa\t44.0\t1e-7\tPASS\tkeep\tadd <X> & <W>\n"
+    )
+    out = prepare.results_table_html(tsv)
+    assert "&lt;X&gt;" in out and "&amp;" in out

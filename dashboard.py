@@ -78,12 +78,20 @@ class Handler(http.server.BaseHTTPRequestHandler):
         self.wfile.write(body)
 
 
+class _Server(socketserver.TCPServer):
+    allow_reuse_address = True
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--port", type=int, default=8000)
     args = ap.parse_args()
     DASH.mkdir(exist_ok=True)
-    with socketserver.TCPServer(("127.0.0.1", args.port), Handler) as httpd:
+    try:
+        httpd = _Server(("127.0.0.1", args.port), Handler)
+    except OSError as e:
+        raise SystemExit(f"port {args.port} is busy ({e}); try: uv run dashboard.py --port 8001")
+    with httpd:
         print(f"dashboard: http://localhost:{args.port}  (Ctrl-C to stop)")
         httpd.serve_forever()
 

@@ -7,7 +7,9 @@ inference live in `train.py`, the only file an experiment may change.
 
 from __future__ import annotations
 
+import html
 import math
+import os
 import pathlib
 
 import numpy as np
@@ -98,6 +100,16 @@ def print_summary(metrics):
 DASH_DIR = HERE / ".dash"
 
 
+def _atomic_savefig(fig, path):
+    import matplotlib.pyplot as plt
+    path = pathlib.Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + ".tmp")
+    fig.savefig(tmp, dpi=110, format="png")
+    plt.close(fig)
+    os.replace(tmp, path)
+
+
 def _read_ledger(results_tsv):
     """Parse results.tsv into a list of dict rows (elbo coerced to float)."""
     p = pathlib.Path(results_tsv)
@@ -155,50 +167,51 @@ def save_fit_plot(species, traj_grid, dt, metrics, path):
     ax2.set_ylabel("total mass"); ax2.set_xlabel("time")
     ax2.legend(fontsize=8, loc="lower left")
 
-    DASH_DIR.mkdir(exist_ok=True)
-    fig.tight_layout(); fig.savefig(path, dpi=110); plt.close(fig)
+    fig.tight_layout()
+    _atomic_savefig(fig, path)
 
 
 def save_progress_plot(results_tsv, path):
     """ELBO vs iteration from the ledger; green o = keep, red x = discard."""
+    rows = _read_ledger(results_tsv)
+    if not rows:
+        return
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
 
-    rows = _read_ledger(results_tsv)
     fig, ax = plt.subplots(figsize=(8, 3.2))
-    if rows:
-        elbos = [r["elbo"] for r in rows]
-        ax.plot(range(len(rows)), elbos, color="0.6", lw=1, zorder=1)
-        for x, r in enumerate(rows):
-            keep = r.get("status") == "keep"
-            ax.scatter(x, r["elbo"], s=60, zorder=3,
-                       marker="o" if keep else "x",
-                       color="tab:green" if keep else "tab:red")
-            if r.get("mass_gate") != "PASS":
-                ax.annotate("mass FAIL", (x, r["elbo"]), fontsize=7, color="tab:red",
-                            textcoords="offset points", xytext=(0, 6))
-        ax.axhline(elbos[0], color="0.8", ls=":", label="baseline")
-        ax.legend(fontsize=8)
+    elbos = [r["elbo"] for r in rows]
+    ax.plot(range(len(rows)), elbos, color="0.6", lw=1, zorder=1)
+    for x, r in enumerate(rows):
+        keep = r.get("status") == "keep"
+        ax.scatter(x, r["elbo"], s=60, zorder=3,
+                   marker="o" if keep else "x",
+                   color="tab:green" if keep else "tab:red")
+        if r.get("mass_gate") != "PASS":
+            ax.annotate("mass FAIL", (x, r["elbo"]), fontsize=7, color="tab:red",
+                        textcoords="offset points", xytext=(0, 6))
+    ax.axhline(elbos[0], color="0.8", ls=":", label="baseline")
+    ax.legend(fontsize=8)
     ax.set_xlabel("iteration"); ax.set_ylabel("ELBO")
     ax.set_title("AutoResearch progress")
-    DASH_DIR.mkdir(exist_ok=True)
-    fig.tight_layout(); fig.savefig(path, dpi=110); plt.close(fig)
+    fig.tight_layout()
+    _atomic_savefig(fig, path)
 
 
 def results_table_html(results_tsv):
     """Return an HTML table for the ledger, or a placeholder if empty."""
     p = pathlib.Path(results_tsv)
-    if not p.exists() or not p.read_text().strip():
+    if not p.exists():
         return "<p>No runs logged yet.</p>"
     lines = [ln for ln in p.read_text().splitlines() if ln.strip()]
     if len(lines) < 2:
         return "<p>No runs logged yet.</p>"
     header = lines[0].split("\t")
     out = ["<table border='1' cellpadding='4' cellspacing='0'><tr>"]
-    out += [f"<th>{h}</th>" for h in header]
+    out += [f"<th>{html.escape(h)}</th>" for h in header]
     out.append("</tr>")
     for line in lines[1:]:
-        out.append("<tr>" + "".join(f"<td>{c}</td>" for c in line.split("\t")) + "</tr>")
+        out.append("<tr>" + "".join(f"<td>{html.escape(c)}</td>" for c in line.split("\t")) + "</tr>")
     out.append("</table>")
     return "\n".join(out)

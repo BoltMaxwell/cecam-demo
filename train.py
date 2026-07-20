@@ -150,6 +150,10 @@ def main():
     }
     prepare.print_summary(metrics)
 
+    # Dashboard: render the current model fit each run (fixed harness output).
+    prepare.save_fit_plot(SPECIES, traj, DT, metrics,
+                          prepare.DASH_DIR / "fit.png")
+
 
 if __name__ == "__main__":
     main()

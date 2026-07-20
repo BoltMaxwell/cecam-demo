@@ -1,0 +1,8 @@
+commit	elbo	mass_residual	mass_gate	status	description
+2946bce	4.415623e+01	1.831055e-07	PASS	keep	baseline: NO3->NO2->{N2,NH3,N2O} direct, no hidden species
+ed75586	5.244389e+01	1.220703e-07	PASS	keep	add hidden NO: NO2->NO->N2O->N2 chain, NO2->NH3 branch
+ab680ff	6.687736e+01	4.882813e-07	PASS	keep	NO branches in parallel to N2 and N2O directly (drop N2O->N2)
+54cec6f	6.375864e+01	2.441406e-07	PASS	discard	hybrid: add N2O->N2 back onto parallel NO branching; odds=0.044 vs ab680ff
+4318e24	6.726305e+01	3.662109e-07	PASS	keep	NH3 branches off hidden NO instead of NO2; odds=1.47 vs ab680ff
+2569a8f	6.370810e+01	3.662109e-07	PASS	discard	add direct NO2->N2 shortcut bypassing hidden NO; odds=0.029 vs 4318e24
+565c0fc	6.635847e+01	2.441406e-07	PASS	discard	second hidden species NOH in series before NO; odds=0.40 vs 4318e24

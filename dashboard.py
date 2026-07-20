@@ -3,7 +3,7 @@
     uv run dashboard.py            # then open http://localhost:8000
 
 Shows the current model fit (refreshed each train.py run) and the AutoResearch
-progress from results.tsv. The page auto-refreshes every 2 seconds.
+progress from results.tsv. The page auto-refreshes every 5 seconds.
 """
 from __future__ import annotations
 
@@ -19,7 +19,7 @@ DASH = prepare.DASH_DIR
 RESULTS = HERE / "results.tsv"
 
 PAGE = """<!doctype html><html><head><meta charset="utf-8">
-<meta http-equiv="refresh" content="2">
+<meta http-equiv="refresh" content="5">
 <title>Catalysis AutoResearch - live</title>
 <style>
  body{{font-family:system-ui,sans-serif;margin:24px;max-width:900px}}
@@ -30,7 +30,7 @@ PAGE = """<!doctype html><html><head><meta charset="utf-8">
 <h1>Catalysis AutoResearch - live</h1>
 <h2>Current model fit</h2>{fit}
 <h2>AutoResearch progress</h2>{progress}{table}
-<p class="note">auto-refreshing every 2s</p>
+<p class="note">auto-refreshing every 5s</p>
 </body></html>"""
 
 

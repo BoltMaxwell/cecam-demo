@@ -44,7 +44,7 @@ In a **second terminal**, start the dashboard and open it in a browser:
 uv run dashboard.py      # then open http://localhost:8000
 ```
 
-It refreshes every 2 seconds and shows two things as the agent works:
+It refreshes every 5 seconds and shows two things as the agent works:
 
 - **Current model fit** — the species concentration curves vs. the measured
   data, plus total mass against the 500 mmol/L target. When the agent adds an

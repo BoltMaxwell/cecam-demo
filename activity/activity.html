@@ -1,0 +1,368 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>An AutoResearch Harness for Catalysis</title>
+  <style>
+    :root {
+      --purdue-gold: #cfb991;
+      --purdue-aged-gold: #8e6f3e;
+      --purdue-black: #000000;
+      --ink: #1f2933;
+      --muted: #52616b;
+      --border: #d9dee3;
+      --surface: #f7f8f9;
+      --code-bg: #f3f4f6;
+    }
+    body {
+      margin: 0;
+      color: var(--ink);
+      background: #ffffff;
+      font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    .activity-page {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 32px 24px 56px;
+    }
+    .activity-header {
+      border-top: 8px solid var(--purdue-gold);
+      border-bottom: 1px solid var(--border);
+      padding: 24px 0 18px;
+      margin-bottom: 28px;
+    }
+    .activity-header h1 {
+      margin: 0;
+      color: var(--purdue-black);
+      font-size: 2rem;
+      line-height: 1.15;
+    }
+    .subtitle {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 1.1rem;
+    }
+    .activity-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 18px;
+      margin-top: 14px;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    h1, h2, h3 {
+      line-height: 1.25;
+    }
+    h2 {
+      margin-top: 2rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.25rem;
+    }
+    a {
+      color: #0b5cab;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+    }
+    th, td {
+      border: 1px solid var(--border);
+      padding: 0.55rem 0.65rem;
+      text-align: left;
+      vertical-align: top;
+    }
+    th {
+      background: var(--surface);
+    }
+    code {
+      background: var(--code-bg);
+      border-radius: 4px;
+      padding: 0.1rem 0.25rem;
+      font-size: 0.93em;
+    }
+    pre {
+      overflow-x: auto;
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 0.9rem 1rem;
+    }
+    pre code {
+      padding: 0;
+      background: transparent;
+    }
+    blockquote {
+      margin: 1.25rem 0;
+      padding: 0.75rem 1rem;
+      border-left: 5px solid var(--purdue-gold);
+      background: var(--surface);
+      color: var(--muted);
+    }
+    img {
+      max-width: 100%;
+      height: auto;
+    }
+    .repo-callout {
+      margin: 1.25rem 0;
+      padding: 0.9rem 1.1rem;
+      border: 1px solid var(--border);
+      border-left: 5px solid var(--purdue-gold);
+      border-radius: 6px;
+      background: var(--surface);
+    }
+  </style>
+  <script async id="MathJax-script" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+</head>
+<body>
+  <main class="activity-page">
+    <header class="activity-header">
+      <h1>An AutoResearch Harness for Catalysis</h1>
+      <p class="subtitle">Make a coding agent discover hidden physics — honestly</p>
+      <div class="activity-meta">
+        <span><strong>Workshop:</strong> <a href="https://www.cecam.org/workshop-details/ai-methods-to-accelerate-the-simulation-and-discovery-of-materials-1555">AI Methods to Accelerate the Simulation and Discovery of Materials</a> (CECAM, Purdue University)</span>
+        <span><strong>Estimated time:</strong> 45–60 minutes</span>
+      </div>
+    </header>
+
+    <div class="repo-callout">
+      <strong>Everything is in one repository:</strong>
+      <a href="https://github.com/BoltMaxwell/cecam-demo">github.com/BoltMaxwell/cecam-demo</a>.
+      No agent? Step through a real run in your browser —
+      <a href="https://colab.research.google.com/github/BoltMaxwell/cecam-demo/blob/extras/replay.ipynb">open the replay notebook in Colab</a>.
+    </div>
+
+    <p>A coding agent left alone tends to <strong>drift</strong>: it forgets your instructions,
+declares victory on a weak result, and leaves nothing you can rerun. A
+<strong>harness</strong> fixes that — a few project files and rules that pin down the problem,
+the metric, and a loop that keeps only changes that genuinely help, all tracked
+in Git.</p>
+    <p>In this activity you point a coding agent (Codex or Claude) at a catalysis
+calibration problem wrapped in an <strong>AutoResearch-style harness</strong>, and let it run an
+evidence-driven search. The harness is what turns a plausible-sounding but
+unphysical "fit" into an honest scientific result.</p>
+
+    <h2 id="the-task">The task</h2>
+    <p>You fit a kinetic reaction model to a catalysis dataset: five species —
+NO3, NO2, N2, NH3, N2O — measured over time, all starting as 500 mmol/L of NO3.
+The vessel is closed, so total mass must be conserved. But the five
+<em>observed</em> species sum to noticeably less than 500 at intermediate times:
+some mass is temporarily held in a species the experiment never measured. A thin
+prompt lets an agent ignore this and "fit the data" with an unphysical model.
+The harness will not let that pass.</p>
+
+    <h2 id="a-little-background-model-calibration">A little background: model calibration</h2>
+
+    <div class="math-background">
+
+    <p>The data are concentrations of chemical species measured over time. A
+<strong>kinetic model</strong> describes how they evolve: each reaction proceeds
+at a rate set by a rate constant, and together the reactions form a system of
+ordinary differential equations,</p>
+
+    \[ \frac{dc}{dt} = f(c, k), \]
+
+    <p>where \(c(t)\) are the concentrations and \(k\) are the unknown rate
+constants. <strong>Calibration</strong> means finding the \(k\) that make the
+model match the data.</p>
+
+    <p>Rather than a single best-fit \(k\), we take a <strong>Bayesian</strong> view.
+We start from a prior over plausible rates, \(p(k)\), and a likelihood for the
+data given the rates — here, Gaussian measurement noise around the model
+prediction — \(p(\mathrm{data}\mid k)\). Bayes' rule combines them into the
+posterior,</p>
+
+    \[ p(k \mid \mathrm{data}) \;\propto\; p(\mathrm{data}\mid k)\, p(k). \]
+
+    <p>Two quantities matter here:</p>
+
+    <ul>
+    <li>The <strong>evidence</strong> (marginal likelihood)
+    \[ p(\mathrm{data}) = \int p(\mathrm{data}\mid k)\, p(k)\, dk, \]
+    the probability the <em>model as a whole</em> assigns to the data. It rewards
+    good fit but penalises unnecessary complexity, which is why it is the right
+    quantity for comparing models.</li>
+    <li>The <strong>ELBO</strong>, a tractable lower bound on \(\log p(\mathrm{data})\)
+    that we compute with variational inference. <code>train.py</code> reports it, and
+    we treat it as a stand-in for the log-evidence.</li>
+    </ul>
+
+    <p>You do not need to derive any of this. The harness computes the ELBO for you;
+the activity is about using it to drive a disciplined search over reaction
+networks.</p>
+
+    </div>
+
+    <h2 id="the-harness">The harness</h2>
+    <p>Three files, with the discipline in the separation:</p>
+    <ul>
+    <li><code>prepare.py</code> — <strong>fixed benchmark.</strong> Owns the data, the mass-conservation gate,
+      and the model-comparison rule. Never edited.</li>
+    <li><code>train.py</code> — <strong>the only editable file.</strong> The reaction network + variational
+      inference (numpyro SVI). It reports the model's <strong>ELBO</strong>.</li>
+    <li><code>AGENTS.md</code> (and an identical <code>CLAUDE.md</code>) — <strong>the harness.</strong> The objective, the rules, and the loop.</li>
+    </ul>
+    <p>Plus <code>results.tsv</code> (the ledger) and Git as the ratchet.</p>
+    <p>The whole method is one loop, repeated:</p>
+    <p><img alt="The AutoResearch loop: propose a change to train.py, evaluate it (fit with SVI to get the ELBO and check the mass gate) against the fixed prepare.py benchmark, compare it to the current best by the evidence odds, accept it (commit) or reject it (revert), record the trial in the ledger, and repeat." src="autoresearch_loop.png"></p>
+
+    <h2 id="how-models-are-judged-the-evidence">How models are judged: the evidence</h2>
+    <p><code>train.py</code> fits the model with variational inference and reports the <strong>ELBO</strong>.
+The ELBO is a lower bound on the model's <em>log-evidence</em> — the probability the
+model assigns to the data, automatically penalising unnecessary parameters
+(Occam's razor). We treat <code>exp(ELBO)</code> as a stand-in for the evidence.</p>
+    <p>Models are compared <strong>sequentially against the current best</strong>. Assume the
+current best model and a proposed model are equally probable a priori. Then the
+posterior <strong>odds</strong> in favour of the proposal are just the evidence ratio:</p>
+    <pre><code class="language-text">odds = exp(ELBO_proposed - ELBO_best)
+</code></pre>
+    <ul>
+    <li><code>odds &gt; 1</code> → the data favour the proposal → <strong>accept</strong> it as the new best.</li>
+    <li><code>odds &lt;= 1</code> → <strong>reject</strong> it and revert.</li>
+    </ul>
+    <p>One hard constraint sits in front of this: the <strong>mass gate</strong>. A model whose
+total mass drifts more than 2% from 500 mmol/L is unphysical and is rejected
+outright, whatever its ELBO. Together, the gate forbids cheating by leaking
+mass, and the evidence rewards models that genuinely explain the data — which,
+for this dataset, means introducing the unobserved intermediate.</p>
+    <p><strong>One thing is off-limits: do not touch the priors.</strong> The ELBO contains a
+penalty term, the distance between the fitted parameters and their prior. You can
+shrink that penalty — and inflate the ELBO — simply by <em>tightening the prior</em>
+around the answer, without changing the model at all. That is gaming the metric,
+not doing science: it makes the number go up while teaching you nothing about the
+chemistry, and it breaks the evidence comparison (two models are only comparable
+under the <em>same</em> prior). In this activity the prior is <strong>fixed</strong>. The only honest
+way to raise the evidence is to improve the <strong>reaction network</strong>.</p>
+
+    <h2 id="read-the-harness-agents-md">Read the harness: <code>AGENTS.md</code></h2>
+    <p>Before you start, open and read <code>AGENTS.md</code> in the repo — it is the complete
+set of instructions the agent follows. You will not change it; read it so you
+understand the loop you are about to run. Its core:</p>
+    <pre><code class="language-markdown">## Objective
+Maximise the evidence for the model, measured by the ELBO (printed by
+train.py), subject to a hard constraint: the mass gate must PASS.
+
+## How models are compared (evidence odds)
+The current best run has elbo_best. For a proposed model with elbo_proposed,
+assume the two models are equally probable a priori. Then the odds in favour
+of the proposal are:
+    odds = exp(elbo_proposed - elbo_best)
+  - odds &gt; 1   -&gt; accept (keep it as the new best)
+  - odds &lt;= 1  -&gt; reject (revert to the previous best)
+
+## Rules
+- Edit train.py only; change the reaction network (species, pathways,
+  stoichiometry, including unobserved species).
+- Do NOT touch the priors or the noise model: tightening a prior inflates the
+  ELBO without changing the model, and breaks the comparison.
+- Never edit prepare.py, catalysis.csv, or the mass gate.
+
+## Experiment loop (repeat each iteration)
+1. Make ONE change to train.py. Commit it.
+2. Run: uv run train.py &gt; run.log 2&gt;&amp;1
+3. Read elbo and mass_gate from run.log.
+4. mass gate FAILED -&gt; revert. Else odds &gt; 1 -&gt; accept (new best), else revert.
+5. Append a row to results.tsv; update MEMORY.md and TODO.md.
+</code></pre>
+    <p>The full file also covers how to set up and run the project, so when you start
+the run the agent sets up the environment, establishes the baseline, and iterates
+on its own.</p>
+
+    <h2 id="part-1-get-the-code-and-run-the-search">Part 1: Get the code and run the search</h2>
+    <p>Clone the repository and open the folder in your coding agent (Codex or Claude):</p>
+    <pre><code>git clone https://github.com/BoltMaxwell/cecam-demo.git
+cd cecam-demo
+uv sync</code></pre>
+    <p>Confirm the baseline runs — <code>uv run train.py</code> should print
+<code>mass_gate: PASS</code> and an ELBO around 44. That is a closed five-species
+network with no hidden intermediate: it conserves mass but fits poorly, and it is
+the bar to beat.</p>
+    <p>Open the folder in Codex or Claude (so it reads <code>AGENTS.md</code> /
+<code>CLAUDE.md</code>) and paste this prompt:</p>
+    <pre><code class="language-text">Read AGENTS.md and follow it exactly. Your objective is to maximise the ELBO
+reported by train.py, subject to the mass gate passing. Run the experiment loop
+for up to 8 iterations, logging every run to results.tsv. Do not edit prepare.py,
+the data, the priors, or the noise model — only the reaction network in train.py.</code></pre>
+    <p>As the search runs, watch each iteration become a Git commit and a row in
+<code>results.tsv</code>. When a model tries to fit better by leaking mass, the
+gate fails and it is discarded; the accepted improvement is the one that adds the
+unobserved intermediate.</p>
+
+    <h2 id="watch-it-live">Watch it live (optional dashboard)</h2>
+    <p>In a <strong>second terminal</strong>, start the dashboard and open it in your browser.
+It refreshes every few seconds and shows the current model fit (a new dashed curve
+appears when the agent adds a hidden species) over the ELBO climbing at each
+iteration:</p>
+    <pre><code>uv run dashboard.py     # then open http://localhost:8000</code></pre>
+
+    <h2 id="no-agent-step-through-it-in-colab">No agent? Step through it in Colab</h2>
+    <p>If you don't have a coding agent, you can walk through a real run of the search
+cell by cell — no setup, nothing to install:
+<a href="https://colab.research.google.com/github/BoltMaxwell/cecam-demo/blob/extras/replay.ipynb">open the replay notebook in Colab</a>.
+Each cell fits one candidate model and plots it, so you see the same discovery
+unfold: the evidence climbing from ~44 to ~67 as a hidden species is introduced,
+and the rejections along the way.</p>
+
+    <h2 id="part-2-read-the-result">Part 2: Read the result</h2>
+    <p>The dashboard already plots the best model's fit and the ELBO-versus-iteration
+history. To keep static copies, ask your agent:</p>
+    <pre><code class="language-text">Make two figures and save them as PNGs: (1) the best ELBO so far versus
+iteration, and (2) the best model's predicted concentration curves over time
+with the measured data points overlaid for all five observed species.</code></pre>
+
+    <h2 id="part-3-reflect">Part 3: Reflect</h2>
+    <p>Ask your agent to show you the <code>results.tsv</code> ledger and the commit
+history, then consider: which change raised the evidence the most, and why did the
+mass gate make adding the unobserved intermediate the only honest way to improve
+the fit?</p>
+
+    <h2 id="optional-see-what-happens-without-the-harness">Optional: see what happens without the harness</h2>
+    <p>Two branches let you see the failure modes the harness exists to prevent:</p>
+    <ul>
+    <li><strong>The canned cheat.</strong> From inside your clone, run a pre-built model that
+raises the ELBO by <em>leaking mass</em> — the score goes up while the mass gate FAILs.
+The script is kept off <code>main</code> on purpose, so your agent never sees it:
+    <pre><code>curl -s https://raw.githubusercontent.com/BoltMaxwell/cecam-demo/extras/cheat.py -o /tmp/cheat.py &amp;&amp; uv run python /tmp/cheat.py</code></pre></li>
+    <li><strong>An agent with no harness.</strong> The <code>ungated</code> branch removes the mass
+gate and the prior lock entirely. Clone it, point your agent at it, and see whether
+it stays honest or games the metric:
+    <pre><code>git clone -b ungated https://github.com/BoltMaxwell/cecam-demo.git cecam-ungated</code></pre></li>
+    </ul>
+
+    <h2 id="going-further-optional">Going Further (Optional)</h2>
+    <p>Right now <em>you</em> drive the loop — you ask the agent to take each step. But
+notice how much of it is mechanical: run <code>train.py</code>, read the ELBO,
+check the mass gate, compute the odds, keep or revert, log the result. None of that
+needs a human.</p>
+    <p>On your own time, think about how much more of the harness you could build in:</p>
+    <ul>
+    <li><strong>Bake the accept/reject decision into code.</strong> A small driver script could run
+<code>train.py</code>, parse the summary, apply the gate-and-odds rule, and commit or
+revert automatically — so the decision is never a judgment call in the moment.</li>
+    <li><strong>Put the whole loop on autopilot.</strong> That driver could call a <em>subagent</em> (for
+example, <code>codex exec</code> in non-interactive mode) once per iteration with a single
+job: "propose one change to <code>train.py</code>." Everything else — running, scoring,
+deciding, logging — happens without you. You set the direction and the budget;
+the harness does the iterating.</li>
+    </ul>
+    <p>This is essentially how the AutoResearch repositories that inspired this activity
+work. As you imagine it, ask yourself: where should the line sit between what the
+agent <em>decides</em> and what the harness <em>enforces</em> — and what do you gain, and
+risk, by moving more of the loop onto autopilot?</p>
+
+    <h2 id="for-claude-users">For Claude users</h2>
+    <p>The repository ships both <code>AGENTS.md</code> (for Codex) and an identical
+<code>CLAUDE.md</code> (for Claude) — just open the folder in whichever agent you use;
+everything else is the same.</p>
+
+    <h2 id="source-notes">Source Notes</h2>
+    <ul>
+    <li>Repository: <a href="https://github.com/BoltMaxwell/cecam-demo">github.com/BoltMaxwell/cecam-demo</a> (harnessed <code>main</code>; the <code>extras</code> and <code>ungated</code> branches hold the cheat, the replay notebook, and the no-harness regime).</li>
+    <li>Motivation: <a href="https://ebilionis.substack.com/p/why-scientific-autonomy-needs-a-harness">"Why Scientific Autonomy Needs a Harness"</a>.</li>
+    <li>Pattern: <a href="https://github.com/PredictiveScienceLab/autoresearch-pinns/tree/autoresearch/mar22b"><code>autoresearch-pinns</code></a> and Karpathy's <a href="https://github.com/karpathy/autoresearch"><code>autoresearch</code></a>.</li>
+    <li><code>AGENTS.md</code> reference: <a href="https://agents.md/">agents.md</a>; <code>uv</code>: <a href="https://docs.astral.sh/uv/">docs.astral.sh/uv</a>.</li>
+    </ul>
+  </main>
+</body>
+</html>

@@ -16,17 +16,32 @@ export function FitChart({ state }: { state: FitState }) {
     }]),
   ) satisfies ChartConfig
 
-  const gridRows = state.grid_times.map((t, i) => ({
-    t,
-    ...Object.fromEntries(state.species.map((s) => [s, state.predicted[s][i]])),
-  }))
-  const obsRows = (s: string) =>
-    state.obs_times.map((t, i) => ({ t, y: state.observed[s][i] }))
   const tMax = state.grid_times[state.grid_times.length - 1]
+  const dt = state.grid_times.length > 1
+    ? state.grid_times[1] - state.grid_times[0]
+    : 1
+  const observedSpecies = state.species.filter((s) => s in state.observed)
+
+  // One data array: predicted lines on the full grid, with the measured points
+  // merged into the SAME rows at each measurement's grid index (the seven
+  // measured times land exactly on the RK4 grid by construction). The
+  // observation scatters therefore share the exact numeric x-axis as the lines,
+  // with no second data array to reconcile — robust across Recharts versions.
+  const rows: Record<string, number>[] = state.grid_times.map((t, i) => {
+    const row: Record<string, number> = { t }
+    for (const s of state.species) row[s] = state.predicted[s][i]
+    return row
+  })
+  state.obs_times.forEach((ot, oi) => {
+    const gi = Math.round(ot / dt)
+    if (gi >= 0 && gi < rows.length) {
+      for (const s of observedSpecies) rows[gi][`${s}__obs`] = state.observed[s][oi]
+    }
+  })
 
   return (
     <ChartContainer config={config} className="aspect-[2/1] w-full">
-      <ComposedChart data={gridRows} margin={{ top: 8, right: 8 }}>
+      <ComposedChart data={rows} margin={{ top: 8, right: 8 }}>
         <CartesianGrid vertical={false} />
         <XAxis
           dataKey="t" type="number" domain={[0, tMax]} tickCount={7}
@@ -45,9 +60,9 @@ export function FitChart({ state }: { state: FitState }) {
             strokeDasharray={state.hidden.includes(s) ? "6 4" : undefined}
           />
         ))}
-        {state.species.filter((s) => s in state.observed).map((s) => (
+        {observedSpecies.map((s) => (
           <Scatter
-            key={`obs-${s}`} data={obsRows(s)} dataKey="y" name={s}
+            key={`obs-${s}`} dataKey={`${s}__obs`} name={s}
             legendType="none" fill={`var(--color-${s})`}
             stroke="var(--background)" strokeWidth={1} isAnimationActive={false}
           />

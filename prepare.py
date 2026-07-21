@@ -215,3 +215,50 @@ def results_table_html(results_tsv):
         out.append("<tr>" + "".join(f"<td>{html.escape(c)}</td>" for c in line.split("\t")) + "</tr>")
     out.append("</table>")
     return "\n".join(out)
+
+
+def _finite_or_none(value):
+    """float(value) if it is a finite number, else None (JSON-safe)."""
+    try:
+        f = float(value)
+    except (TypeError, ValueError):
+        return None
+    return f if math.isfinite(f) else None
+
+
+def save_fit_state(species, traj_grid, dt, metrics, path):
+    """JSON twin of save_fit_plot: everything the SPA needs to draw the fit.
+
+    Same inputs as save_fit_plot. Atomic write (tmp + os.replace) so the
+    server never reads a half-written file. allow_nan=False: a non-finite
+    trajectory raises rather than emitting invalid JSON.
+    """
+    import json
+    import time
+
+    data = load()
+    species = list(species)
+    traj = np.asarray(traj_grid, dtype=float) * TOTAL0
+    grid_times = np.arange(traj.shape[0]) * dt
+    state = {
+        "generated_at": time.time(),
+        "elbo": _finite_or_none(metrics.get("elbo")),
+        "mass_residual": _finite_or_none(metrics.get("mass_residual")),
+        "mass_gate": bool(metrics.get("mass_gate")),
+        "inference_seconds": _finite_or_none(metrics.get("inference_seconds")),
+        "total0": TOTAL0,
+        "species": species,
+        "hidden": [s for s in species if s not in OBSERVED],
+        "grid_times": np.round(grid_times, 4).tolist(),
+        "predicted": {s: np.round(traj[:, j], 4).tolist()
+                      for j, s in enumerate(species)},
+        "obs_times": data["times"].tolist(),
+        "observed": {s: data["obs"][:, k].tolist()
+                     for k, s in enumerate(OBSERVED)},
+        "total_mass": np.round(traj.sum(axis=1), 4).tolist(),
+    }
+    path = pathlib.Path(path)
+    path.parent.mkdir(parents=True, exist_ok=True)
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text(json.dumps(state, allow_nan=False))
+    os.replace(tmp, path)

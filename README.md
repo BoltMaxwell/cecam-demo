@@ -5,6 +5,27 @@ catalysis experiment. All nitrogen starts as NO3 at 500 mmol/L, yet the five
 **observed** species sum to *less than* 500 at intermediate times. The missing
 mass is the whole puzzle — and the reason a harness matters.
 
+## This branch: `pretty-dashboard` (presenter UI)
+
+A React + shadcn/ui version of the live dashboard for presenting on stage.
+`main` keeps the zero-dependency stdlib dashboard for participants.
+
+**Run it (no node needed — `frontend/dist/` is committed):**
+
+    uv run server.py            # http://localhost:8000
+
+Start an agent run (or `uv run train.py`) in another terminal and the page
+updates live: `train.py` writes `.dash/state.json`, `server.py` serves it at
+`/api/state` plus the `results.tsv` ledger at `/api/ledger`, and the SPA polls
+both every 4 s. The old `uv run dashboard.py` still works unchanged.
+
+**Develop the frontend:**
+
+    uv run server.py                    # API on :8000
+    cd frontend && npm install && npm run dev   # Vite on :5173, /api proxied
+
+After UI changes: `npm run build`, commit the refreshed `frontend/dist/`.
+
 ## What you need (from the earlier activities)
 
 - A coding agent: **Codex** (uses `AGENTS.md`) or **Claude** (uses `CLAUDE.md`).

@@ -10,14 +10,23 @@ mass is the whole puzzle — and the reason a harness matters.
 A React + shadcn/ui version of the live dashboard for presenting on stage.
 `main` keeps the zero-dependency stdlib dashboard for participants.
 
-**Run it (no node needed — `frontend/dist/` is committed):**
+**Run it (no node needed — `frontend/dist/` is committed).** Clone this branch
+into its own directory so it doesn't collide with a `main` checkout:
 
-    uv run server.py            # http://localhost:8000
+    git clone -b pretty-dashboard https://github.com/BoltMaxwell/cecam-demo.git cecam-pretty
+    cd cecam-pretty
+    uv sync
+    uv run server.py --port 8001      # then open http://localhost:8001
 
 Start an agent run (or `uv run train.py`) in another terminal and the page
 updates live: `train.py` writes `.dash/state.json`, `server.py` serves it at
 `/api/state` plus the `results.tsv` ledger at `/api/ledger`, and the SPA polls
 both every 4 s. The old `uv run dashboard.py` still works unchanged.
+
+**Compare side by side with the stdlib dashboard on `main`:** in a separate
+`main` clone run `uv run dashboard.py` (serves `http://localhost:8000`), and run
+this branch's `uv run server.py --port 8001`. Open both in adjacent browser
+windows to A/B the matplotlib page against the React SPA on the same data.
 
 **Develop the frontend:**
 

@@ -156,6 +156,11 @@ def main():
     # Dashboard: render the current model fit each run (fixed harness output).
     prepare.save_fit_plot(SPECIES, traj, DT, metrics,
                           prepare.DASH_DIR / "fit.png")
+    try:
+        prepare.save_fit_state(SPECIES, traj, DT, metrics,
+                               prepare.DASH_DIR / "state.json")
+    except ValueError as e:  # non-finite trajectory: keep the run, warn once
+        print(f"dashboard state not written: {e}")
 
 
 if __name__ == "__main__":
